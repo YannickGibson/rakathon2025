@@ -1,0 +1,6 @@
+- CT: Computed Tomography
+- RD: Radiotherapy Dose
+- RE: Radiotherapy Equipment (or Related info)
+- RI: Radiotherapy Image
+- RS: Radiotherapy Structure Set
+- RT: Radiotherapy Treatment Plan
