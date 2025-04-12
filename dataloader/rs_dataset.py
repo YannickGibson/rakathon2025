@@ -10,9 +10,9 @@ from skimage.transform import resize
 class RSDataset(Dataset):
     """
     Dataset for loading GTV, CTV, and PTV contours from a single patient's RT Structure Set.
-    Converts contours to 128x128 bitmap images for each slice.
+    Converts contours to img_size bitmap images for each slice.
     """
-    def __init__(self, rtstruct_path, img_size=(128, 128), verbose=False):
+    def __init__(self, rtstruct_path, img_size=(512, 512), verbose=False):
         self.rtstruct_path = rtstruct_path
         self.dataset_path = os.path.dirname(rtstruct_path)
         self.img_size = img_size
@@ -190,8 +190,8 @@ class RSDataset(Dataset):
             ct_dicom = pydicom.dcmread(ct_path)
             ct_array = ct_dicom.pixel_array
             
-            # Scale to 128x128
-            ct_scaled = resize(ct_array, (128, 128), anti_aliasing=True)
+            # Scale to img_size
+            ct_scaled = resize(ct_array, self.img_size, anti_aliasing=True)
             
             # Normalize to 0-1 range
             ct_normalized = (ct_scaled - ct_scaled.min()) / (ct_scaled.max() - ct_scaled.min())
@@ -199,7 +199,7 @@ class RSDataset(Dataset):
             return ct_normalized
         except Exception as e:
             print(f"Error loading CT image: {e}")
-            return np.zeros((128, 128), dtype=np.float32)
+            return np.zeros(self.img_size, dtype=np.float32)
     
     def __len__(self):
         return len(self.slices)
@@ -248,8 +248,8 @@ class RSDataset(Dataset):
             review_date = None
 
         return {
-            'masks': masks,  # Shape: [3, 128, 128]
-            'ct': ct_tensor,  # Shape: [1, 128, 128]
+            'masks': masks,
+            'ct': ct_tensor,
             'z_position': slice_data['z_position'],
             'index': idx,
             'rs_uid': slice_data['rs_uid'],  # Include the UI in the returned dictionary

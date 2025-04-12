@@ -15,10 +15,10 @@ DATASET_PATH = "dataloader/data/full/SAMPLE_001"
 class PairDataset(Dataset):
     """
     Dataset for loading GTV, CTV, and PTV contours from a single patient's RT Structure Set.
-    Converts contours to 128x128 bitmap images for each slice.
+    Converts contours to img_size bitmap images for each slice.
     """
 
-    def __init__(self, rtstruct_path1, rtstruct_path2, img_size=(128, 128)):
+    def __init__(self, rtstruct_path1, rtstruct_path2, img_size=(512, 512)):
 
         self.dataset1 = RSDataset(rtstruct_path1, img_size)
         self.dataset2 = RSDataset(rtstruct_path2, img_size)
@@ -38,6 +38,14 @@ class PairDataset(Dataset):
         """Sort slices by z_position"""
 
         map = {}
+
+        if len(self.dataset1) == 0 or len(self.dataset2) == 0:
+            print(
+                f"Problematic dataset XD,\t len.dataset1 and len.dataset2 {len(self.dataset1)}, {len(self.dataset2)}"
+            )
+            self.is_problematic = True
+            return map
+
         map[self.dataset1[0]["review_date"]] = {}
         map[self.dataset2[0]["review_date"]] = {}
 
@@ -56,8 +64,6 @@ class PairDataset(Dataset):
             lowest_z_positions[review_date] = min(slices.keys())
             max_z_positions[review_date] = max(slices.keys())
 
- 
-
         self.lowest_z_position = max(lowest_z_positions.values())
         self.max_z_position = min(max_z_positions.values())
 
@@ -74,7 +80,7 @@ class PairDataset(Dataset):
             self.lowest_z_position_1 > self.max_z_position_2
             or self.lowest_z_position_2 > self.max_z_position_1
         ):
-            print("Problematic dataset XD")
+            print("Problematic dataset XD, z_positions did not match")
             self.is_problematic = True
             return map
 
@@ -102,8 +108,6 @@ class PairDataset(Dataset):
             while abs(self.max_z_position_1 - self.max_z_position_2) > 1:
                 self.max_z_position_1 = self.max_z_position_1 - 3
 
- 
-
         return map
 
     def _load_ct_image(self, ui):
@@ -121,8 +125,6 @@ class PairDataset(Dataset):
         z_position_1 = int(self.lowest_z_position_1 + idx * 3)
         z_position_2 = int(self.lowest_z_position_2 + idx * 3)
 
-        print(f"z_position_1: {z_position_1}, z_position_2: {z_position_2}")
-
         item1_position = self.sort_map[self.dataset1[0]["review_date"]].get(
             z_position_1, "None"
         )
@@ -130,7 +132,6 @@ class PairDataset(Dataset):
             z_position_2, "None"
         )
 
-        print(f"item1_position: {item1_position}, item2_position: {item2_position}")
         return item1_position, item2_position
 
     def __getitem__(self, idx):
