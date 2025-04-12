@@ -190,13 +190,13 @@ class RSDataset(Dataset):
             ct_dicom = pydicom.dcmread(ct_path)
             ct_array = ct_dicom.pixel_array
             
-            # Scale to img_size
-            ct_scaled = resize(ct_array, self.img_size, anti_aliasing=True)
+            # # Scale to img_size
+            # ct_scaled = resize(ct_array, self.img_size, anti_aliasing=True)
             
-            # Normalize to 0-1 range
-            ct_normalized = (ct_scaled - ct_scaled.min()) / (ct_scaled.max() - ct_scaled.min())
+            # # Normalize to 0-1 range
+            # ct_normalized = (ct_scaled - ct_scaled.min()) / (ct_scaled.max() - ct_scaled.min())
             
-            return ct_normalized
+            return ct_array
         except Exception as e:
             print(f"Error loading CT image: {e}")
             return np.zeros(self.img_size, dtype=np.float32)

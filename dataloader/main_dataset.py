@@ -30,7 +30,6 @@ class MainDataset(Dataset):
         self.DATASET_PATH = DATASET_PATH
         self.img_size = img_size
         self.verbose = verbose
-        self.pair_paths = []
 
         # Load all sample paths (folders in DATASET_PATH prefixed with sample)
         self.SAMPLE_PATHs = []
@@ -43,11 +42,41 @@ class MainDataset(Dataset):
         if limit_samples is not None:
             self.SAMPLE_PATHs = self.SAMPLE_PATHs[:limit_samples]
 
-        print(f"Loading {len(self.SAMPLE_PATHs)} samples from {self.SAMPLE_PATHs[0]} to {self.SAMPLE_PATHs[-1]}")
+        from_base_folder = os.path.basename(self.SAMPLE_PATHs[0])   
+        to_base_folder = os.path.basename(self.SAMPLE_PATHs[-1])
+        print(f"Loading {len(self.SAMPLE_PATHs)} samples from {from_base_folder} to {to_base_folder}")
 
+
+        date_paths = []
         if mock:
             date_path_dict = {'20230616': f'{DATASET_PATH}/SAMPLE_001/RS.1.2.246.352.221.46272062591570509005209218152822185346.dcm', '20230719': f'{DATASET_PATH}/SAMPLE_001/RS.1.2.246.352.221.46648924540845111847267152667592345525.dcm', '20240306': f'{DATASET_PATH}/SAMPLE_001/RS.1.2.246.352.221.474069323621439861613904667800073459614.dcm'}
+            date_paths.append(date_path_dict)
+            sorted_keys = sorted(list(date_path_dict.keys()))
+
+            self.pair_datasets = []
+            self.pair_dataset_start = []
+            self.total_count = 0
+
+            if verbose:
+                pbar = tqdm(range(len(sorted_keys)-1), desc=f"Loading+Filtering {len(sorted_keys)-1} Pair Datasets")
+            else:
+                pbar = range(len(sorted_keys)-1)
+            for i in pbar:
+                date1 = sorted_keys[i]
+                date2 = sorted_keys[i+1]
+                path1 = date_path_dict[date1]
+                path2 = date_path_dict[date2]
+                # Now we load pair dataset
+                pair_dataset = PairDataset(path1, path2, img_size=self.img_size)
+                if len(pair_dataset) > 0:
+                    self.pair_datasets.append(pair_dataset)
+                    self.pair_dataset_start.append(self.total_count)
+                    self.total_count += len(pair_dataset)
         else:
+
+            self.pair_datasets = []
+            self.pair_dataset_start = []
+            self.total_count = 0
             for sample_path in self.SAMPLE_PATHs:
                 # Find all rs files
                 rs_files = []
@@ -72,27 +101,31 @@ class MainDataset(Dataset):
                     if len(dataset) > 0:
                         date = dataset[0]['review_date']
                         date_path_dict[date] = rs_file
-        sorted_keys = sorted(list(date_path_dict.keys()))
 
-        self.pair_datasets = []
-        self.pair_dataset_start = []
-        self.total_count = 0
+                date_paths.append(date_path_dict)
+                
+                sorted_keys = sorted(list(date_path_dict.keys()))
+
+                if verbose:
+                    pbar = tqdm(range(len(sorted_keys)-1), desc=f"Loading+Filtering {len(sorted_keys)-1} Pair Datasets")
+                else:
+                    pbar = range(len(sorted_keys)-1)
+                for i in pbar:
+                    date1 = sorted_keys[i]
+                    date2 = sorted_keys[i+1]
+                    path1 = date_path_dict[date1]
+                    path2 = date_path_dict[date2]
+                    # Now we load pair dataset
+                    pair_dataset = PairDataset(path1, path2, img_size=self.img_size)
+                    if len(pair_dataset) > 0:
+                        print("appending pair dataset")
+                        self.pair_datasets.append(pair_dataset)
+                        self.pair_dataset_start.append(self.total_count)
+                        self.total_count += len(pair_dataset)
+                print("Sample done")
 
         if verbose:
-            pbar = tqdm(range(len(sorted_keys)-1), desc=f"Loading {len(sorted_keys)-1} Pair Datasets")
-        else:
-            pbar = range(len(sorted_keys)-1)
-        for i in pbar:
-            date1 = sorted_keys[i]
-            date2 = sorted_keys[i+1]
-            path1 = date_path_dict[date1]
-            path2 = date_path_dict[date2]
-            # Now we load pair dataset
-            pair_dataset = PairDataset(path1, path2, img_size=self.img_size)
-            if len(pair_dataset) > 0:
-                self.pair_datasets.append(pair_dataset)
-                self.pair_dataset_start.append(self.total_count)
-                self.total_count += len(pair_dataset)
+            print(f"Loaded {len(self.pair_datasets)} Pair Datasets")
 
 
     def __len__(self):
@@ -112,26 +145,29 @@ class MainDataset(Dataset):
 
 if __name__ == "__main__":
 
-    LOAD_PICKLE = True
+    LOAD_PICKLE = False
 
     if LOAD_PICKLE:
         import pickle
-        print("Loading dataset (this should only appear once)")
-        with open('main_dataset.pkl', 'rb') as f:
+        print("Loading dataset via pickle")
+        with open('_main_dataset.pkl', 'rb') as f:
             main_dataset = pickle.load(f)
     else:
         DATASET_PATH = "dataloader/data/full/"
 
         main_dataset = MainDataset(
             DATASET_PATH=DATASET_PATH,
-            limit_samples=1, limit_rs_pairs=1,
+            limit_samples=3, limit_rs_pairs=40,
             mock=True, verbose=True)
 
+        save_name = "small_main_dataset"
+        print("Saving dataset via pickle")
+        import pickle
+        with open(f'{save_name}.pkl', 'wb') as f:
+            pickle.dump(main_dataset, f)
+    print(f"Amount of pairs: {len(main_dataset.pair_datasets)}")
     print(main_dataset[0])
 
-        # # save as pickle
-        # import pickle
-        # with open('main_dataset.pkl', 'wb') as f:
-        #     pickle.dump(main_dataset, f)
+        # save as pickle
 
     print("Done.")
