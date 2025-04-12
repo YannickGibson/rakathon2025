@@ -23,7 +23,14 @@ class PairDataset(RTStructSliceDataset):
         self.dataset1 = RTStructSliceDataset(rtstruct_path1, img_size)
         self.dataset2 = RTStructSliceDataset(rtstruct_path2, img_size)
         self.lowest_z_position = 0
+        self.lowest_z_position_1 = 0
+        self.lowest_z_position_2 = 0
         self.max_z_position = 0
+        self.max_z_position_1 = 0
+        self.max_z_position_2 = 0
+        self.offset = 0
+        self.review_date_1 = None
+        self.review_date_2 = None
         self.sort_map = self._sort_slices()
 
     def _sort_slices(self):
@@ -48,11 +55,41 @@ class PairDataset(RTStructSliceDataset):
             lowest_z_positions[review_date] = min(slices.keys())
             max_z_positions[review_date] = max(slices.keys())
 
-        self.lowest_z_position = min(lowest_z_positions.values())
-        self.max_z_position = max(max_z_positions.values())
-
         self.lowest_z_position = max(lowest_z_positions.values())
         self.max_z_position = min(max_z_positions.values())
+
+        self.review_date_1 = self.dataset1[0]["review_date"]
+        self.review_date_2 = self.dataset2[0]["review_date"]
+
+        self.lowest_z_position_1 = lowest_z_positions[self.review_date_1]
+        self.lowest_z_position_2 = lowest_z_positions[self.review_date_2]
+
+        self.max_z_position_1 = max_z_positions[self.review_date_1]
+        self.max_z_position_2 = max_z_positions[self.review_date_2]
+
+        self.offset = (
+            self.dataset2[0]["z_position"] - self.dataset1[0]["z_position"]
+        ) % 3
+        if self.offset == 2:
+            self.offset = -1
+
+        is_dataset_1_minimum = self.lowest_z_position_1 == self.lowest_z_position
+
+        if is_dataset_1_minimum:
+            while abs(self.lowest_z_position_2 - self.lowest_z_position_1) > 1:
+                self.lowest_z_position_2 = self.lowest_z_position_2 + 3
+        else:
+            while abs(self.lowest_z_position_1 - self.lowest_z_position_2) > 1:
+                self.lowest_z_position_1 = self.lowest_z_position_1 + 3
+
+        is_dataset_1_maximum = self.max_z_position_1 == self.max_z_position
+
+        if is_dataset_1_maximum:
+            while abs(self.max_z_position_2 - self.max_z_position_1) > 1:
+                self.max_z_position_2 = self.max_z_position_2 - 3
+        else:
+            while abs(self.max_z_position_1 - self.max_z_position_2) > 1:
+                self.max_z_position_1 = self.max_z_position_1 - 3
 
         return map
 
@@ -61,18 +98,22 @@ class PairDataset(RTStructSliceDataset):
         self.dataset.load_ct_image(ui)
 
     def __len__(self):
-        return int(abs(self.lowest_z_position - self.max_z_position) // 3) + 1
+        return int(abs(self.lowest_z_position_1 - self.max_z_position_1) // 3) + 1
 
     def _get_indexes_of_datasets(self, idx):
-        z_position = int(self.lowest_z_position + idx * 3)
+        z_position_1 = int(self.lowest_z_position_1 + idx * 3)
+        z_position_2 = int(self.lowest_z_position_2 + idx * 3)
+ 
 
         item1_position = self.sort_map[self.dataset1[0]["review_date"]].get(
-            z_position, "None"
+            z_position_1, "None"
         )
         item2_position = self.sort_map[self.dataset2[0]["review_date"]].get(
-            z_position, "None"
+            z_position_2, "None"
         )
 
+       # print(f"z_position_1: {z_position_1}, z_position_2: {z_position_2}")
+       # print(f"item1_position: {item1_position}, item2_position: {item2_position}")
         return item1_position, item2_position
 
     def __getitem__(self, idx):
@@ -113,6 +154,21 @@ if __name__ == "__main__":
         DATASET_PATH + "/RS.1.2.246.352.221.46272062591570509005209218152822185346.dcm"
     )
 
+    rtstruct_path2_empty = (
+        DATASET_PATH + "/RS.1.2.246.352.221.575810977437501802411405694909401015700.dcm"
+    )
+    rtstruct_path2_empty = (
+        DATASET_PATH + "/RS.1.2.246.352.221.572473946963029837111301088203390015649.dcm"
+    )
+    rtstruct_path2_empty = (
+        DATASET_PATH + "/RS.1.2.246.352.221.532615965879045657310555204002629787284.dcm"
+    )
+    rtstruct_path2_empty = (
+        DATASET_PATH + "/RS.1.2.246.352.221.53650830509301879903201092234093239207.dcm"
+    )
+    rtstruct_path2 = (
+        DATASET_PATH + "/RS.1.2.246.352.221.46648924540845111847267152667592345525.dcm"
+    )
     # Create dataset
     dataset = RTStructSliceDataset(rtstruct_path1)
 
@@ -124,6 +180,7 @@ if __name__ == "__main__":
     print(dataset[0]["z_position"])
     print(dataset[56]["z_position"])
 
+    dataset = PairDataset(rtstruct_path2, rtstruct_path1)
     dataset = PairDataset(rtstruct_path1, rtstruct_path2)
 
     print(dataset[0]["z_position"])
