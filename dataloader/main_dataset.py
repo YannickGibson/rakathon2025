@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 from skimage.transform import resize
 from tqdm import tqdm
 
-from pairdataloader import PairDataset
-from dataloader import RTStructSliceDataset
+from pair_dataset import PairDataset
+from rs_dataset import RSDataset
 
 SAMPLE_PATH = "dataloader/data/full/"
 
@@ -70,7 +70,7 @@ class MainDataset(Dataset):
                 else:
                     pbar = rs_files
                 for rs_file in pbar:
-                    dataset = RTStructSliceDataset(rs_file, img_size=self.img_size, verbose=False)
+                    dataset = RSDataset(rs_file, img_size=self.img_size, verbose=False)
                     if len(dataset) > 0:
                         date = dataset[0]['review_date']
                         date_path_dict[date] = rs_file
@@ -92,9 +92,10 @@ class MainDataset(Dataset):
             # Now we load pair dataset
             print(path1, path2)
             pair_dataset = PairDataset(path1, path2, img_size=self.img_size)
-            self.pair_datasets.append(pair_dataset)
-            self.pair_dataset_start.append(self.total_count)
-            self.total_count += len(pair_dataset)
+            if len(pair_dataset) > 0:
+                self.pair_datasets.append(pair_dataset)
+                self.pair_dataset_start.append(self.total_count)
+                self.total_count += len(pair_dataset)
 
 
     def __len__(self):
@@ -120,4 +121,5 @@ if __name__ == "__main__":
     main_dataloader = DataLoader(main_dataset, batch_size=4, shuffle=False)
 
     for batch in main_dataloader:
-        print(batch)
+        pass
+    print("Done.")
