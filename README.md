@@ -1,6 +1,6 @@
-- CT: Computed Tomography
-- RD: Radiotherapy Dose
-- RE: Radiotherapy Equipment (or Related info)
-- RI: Radiotherapy Image
-- RS: Radiotherapy Structure Set
-- RT: Radiotherapy Treatment Plan
+- **CT**: Computed Tomography scan
+- **RD**: Record or Required Data
+- **RE**: Reference
+- **RI**: Resource Identifier
+- **RS**: Result Set
+- **RT**: Reported Treatment
