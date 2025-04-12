@@ -7,12 +7,12 @@ from skimage.draw import polygon2mask
 import matplotlib.pyplot as plt
 from skimage.transform import resize
 import pprint
-from dataloader import RTStructSliceDataset
+from rs_dataset import RSDataset
 
 DATASET_PATH = "dataloader/data/full/SAMPLE_001"
 
 
-class PairDataset(RTStructSliceDataset):
+class PairDataset(Dataset):
     """
     Dataset for loading GTV, CTV, and PTV contours from a single patient's RT Structure Set.
     Converts contours to 128x128 bitmap images for each slice.
@@ -20,8 +20,8 @@ class PairDataset(RTStructSliceDataset):
 
     def __init__(self, rtstruct_path1, rtstruct_path2, img_size=(128, 128)):
 
-        self.dataset1 = RTStructSliceDataset(rtstruct_path1, img_size)
-        self.dataset2 = RTStructSliceDataset(rtstruct_path2, img_size)
+        self.dataset1 = RSDataset(rtstruct_path1, img_size)
+        self.dataset2 = RSDataset(rtstruct_path2, img_size)
         self.lowest_z_position = 0
         self.lowest_z_position_1 = 0
         self.lowest_z_position_2 = 0
@@ -56,8 +56,7 @@ class PairDataset(RTStructSliceDataset):
             lowest_z_positions[review_date] = min(slices.keys())
             max_z_positions[review_date] = max(slices.keys())
 
-        print("lowest_z_positions: ", lowest_z_positions)
-        print("max_z_positions: ", max_z_positions)
+ 
 
         self.lowest_z_position = max(lowest_z_positions.values())
         self.max_z_position = min(max_z_positions.values())
@@ -194,9 +193,9 @@ if __name__ == "__main__":
     rtstruct_path2 = "dataloader/data/full//SAMPLE_001/RS.1.2.246.352.221.474069323621439861613904667800073459614.dcm"
 
     # Create dataset
-    dataset = RTStructSliceDataset(rtstruct_path1)
+    dataset = RSDataset(rtstruct_path1)
 
-    dataset = RTStructSliceDataset(rtstruct_path2)
+    dataset = RSDataset(rtstruct_path2)
 
     dataset = PairDataset(rtstruct_path2, rtstruct_path1)
     dataset = PairDataset(rtstruct_path1, rtstruct_path2)
