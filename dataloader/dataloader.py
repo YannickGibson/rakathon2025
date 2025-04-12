@@ -27,7 +27,8 @@ class RTStructSliceDataset(Dataset):
         self.pixel_size_mm = self.x_range / img_size[0]
         
         # Load the RTSTRUCT file
-        print(f"Loading RT Structure file: {rtstruct_path}")
+        if verbose:
+            print(f"Loading RT Structure file: {rtstruct_path}")
         self.rtstruct = pydicom.dcmread(rtstruct_path)
         
         # Extract contours
@@ -41,7 +42,8 @@ class RTStructSliceDataset(Dataset):
 
         self.slice_uis = []
         
-        print(f"Found {len(self.slices)} slices with contours")
+        if verbose:
+            print(f"Found {len(self.slices)} slices with contours")
 
         
 
@@ -108,7 +110,8 @@ class RTStructSliceDataset(Dataset):
         sorted_z_positions = sorted(all_z_positions)
         if self.verbose:
             vis_pos = [float(z) for z in sorted_z_positions]
-            print(f"Z positions: {vis_pos}")
+            if self.verbose:
+                print(f"Z positions: {vis_pos}")
 
         # For each Z position, collect contours
         for z_pos in sorted_z_positions:
