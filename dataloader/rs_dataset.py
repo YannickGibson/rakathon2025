@@ -190,8 +190,9 @@ class RSDataset(Dataset):
             ct_dicom = pydicom.dcmread(ct_path)
             ct_array = ct_dicom.pixel_array
             
-            # # Scale to img_size
-            # ct_scaled = resize(ct_array, self.img_size, anti_aliasing=True)
+            if ct_array.shape != self.img_size:
+                # Scale to img_size
+                ct_array = resize(ct_array, self.img_size, anti_aliasing=True)
             
             # # Normalize to 0-1 range
             # ct_normalized = (ct_scaled - ct_scaled.min()) / (ct_scaled.max() - ct_scaled.min())
