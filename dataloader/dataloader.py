@@ -234,7 +234,8 @@ class RTStructSliceDataset(Dataset):
             'z_position': slice_data['z_position'],
             'index': idx,
             'rs_uid': slice_data['rs_uid'],  # Include the UI in the returned dictionary
-            "instance_uid": instance_uid
+            "instance_uid": instance_uid,
+            "review_date": self.rtstruct.ReviewDate
         }
     
     def visualize_item(self, idx):
@@ -288,7 +289,7 @@ class RTStructSliceDataset(Dataset):
         axes[4].set_title('Combined (RGB)')
         axes[4].axis('off')
         
-        plt.suptitle(f"Slice {idx} - Z position: {item['z_position']}\nUID: {item['instance_uid']}")
+        plt.suptitle(f"Slice {idx} - Z position: {item['z_position']}\nUID: {item['instance_uid']},\nDate: {item['review_date']}")
         plt.tight_layout()
         return fig
     
