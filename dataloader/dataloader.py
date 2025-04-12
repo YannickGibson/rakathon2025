@@ -18,6 +18,13 @@ class RTStructSliceDataset(Dataset):
         self.img_size = img_size
         self.slices = []
         self.verbose = verbose
+        self.x_min, self.x_max = -300, 300
+        self.y_min, self.y_max = -200, 400
+        self.x_range = self.x_max - self.x_min
+        self.y_range = self.y_max - self.y_min
+        assert self.x_range == self.y_range
+        assert img_size[0] == img_size[1]
+        self.pixel_size_mm = self.x_range / img_size[0]
         
         # Load the RTSTRUCT file
         print(f"Loading RT Structure file: {rtstruct_path}")
@@ -35,6 +42,7 @@ class RTStructSliceDataset(Dataset):
         self.slice_uis = []
         
         print(f"Found {len(self.slices)} slices with contours")
+
         
 
     def _extract_instance_uids(self):
@@ -151,16 +159,13 @@ class RTStructSliceDataset(Dataset):
         y_points = contour[:, 1]
         
         # Define the bounds
-        x_min, x_max = -300, 300
-        y_min, y_max = -200, 400
+
         
         # Scale points to fit within the bounds
-        x_range = x_max - x_min
-        y_range = y_max - y_min
         
         # Scale to image dimensions
-        x_img = (x_points - x_min) / x_range * img_size[1]
-        y_img = (y_points - y_min) / y_range * img_size[0]
+        x_img = (x_points - self.x_min) / self.x_range * img_size[1]
+        y_img = (y_points - self.y_min) / self.y_range * img_size[0]
         
         # Create polygon vertices
         vertices = np.column_stack((y_img, x_img))
@@ -235,7 +240,8 @@ class RTStructSliceDataset(Dataset):
             'index': idx,
             'rs_uid': slice_data['rs_uid'],  # Include the UI in the returned dictionary
             "instance_uid": instance_uid,
-            "review_date": self.rtstruct.ReviewDate
+            "review_date": self.rtstruct.ReviewDate,
+            "pixel_size_mm": self.pixel_size_mm
         }
     
     def visualize_item(self, idx):
@@ -309,11 +315,14 @@ class RTStructSliceDataset(Dataset):
 
 # Example usage
 if __name__ == "__main__":
+    # Order of masks in contour is GTV, CTV, PTV
+
+
     # Path to the specific RTSTRUCT file
     rtstruct_path = f"{DATASET_PATH}/RS.1.2.246.352.221.46272062591570509005209218152822185346.dcm"
     
     # Create dataset
-    dataset = RTStructSliceDataset(rtstruct_path, verbose= True)
+    dataset = RTStructSliceDataset(rtstruct_path, verbose=True)
     
     dataset[0]
     # # Print slice information
