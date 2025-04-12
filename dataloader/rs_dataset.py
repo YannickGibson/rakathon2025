@@ -192,12 +192,13 @@ class RSDataset(Dataset):
             
             if ct_array.shape != self.img_size:
                 # Scale to img_size
-                ct_array = resize(ct_array, self.img_size, anti_aliasing=True)
-            
+                ct_scaled = resize(ct_array, self.img_size, anti_aliasing=True)
+            else:
+                ct_scaled = ct_array
             # # Normalize to 0-1 range
-            # ct_normalized = (ct_scaled - ct_scaled.min()) / (ct_scaled.max() - ct_scaled.min())
+            ct_normalized = (ct_scaled - ct_scaled.min()) / (ct_scaled.max() - ct_scaled.min())
             
-            return ct_array
+            return ct_normalized
         except Exception as e:
             print(f"Error loading CT image: {e}")
             return np.zeros(self.img_size, dtype=np.float32)
