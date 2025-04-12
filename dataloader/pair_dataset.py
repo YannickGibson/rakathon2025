@@ -38,6 +38,19 @@ class PairDataset(Dataset):
         """Sort slices by z_position"""
 
         map = {}
+
+        if (
+            len(self.dataset1) == 0
+            or len(self.dataset2) == 0
+           
+        ):
+            print(f"Problematic dataset XD,\t len.dataset1 and len.dataset2 {len(self.dataset1)}, {len(self.dataset2)}")
+            self.is_problematic = True
+            return map
+
+
+        print(self.dataset1[0]["review_date"] )
+
         map[self.dataset1[0]["review_date"]] = {}
         map[self.dataset2[0]["review_date"]] = {}
 
