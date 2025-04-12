@@ -14,9 +14,9 @@ from rs_dataset import RSDataset
 class MainDataset(Dataset):
     """
     Dataset for loading GTV, CTV, and PTV contours from a single patient's RT Structure Set.
-    Converts contours to 128x128 bitmap images for each slice.
+    Converts contours to img_size bitmap images for each slice.
     """
-    def __init__(self, DATASET_PATH: str, img_size=(128, 128), limit_samples: int | None = None, limit_rs_pairs: int | None = None, mock=False, verbose=True):
+    def __init__(self, DATASET_PATH: str, img_size=(512, 512), limit_samples: int | None = None, limit_rs_pairs: int | None = None, mock=False, verbose=True):
         """
         Args:
             DATASET_PATH is the full dataset path with all patients.

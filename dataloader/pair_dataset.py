@@ -15,10 +15,10 @@ DATASET_PATH = "dataloader/data/full/SAMPLE_001"
 class PairDataset(Dataset):
     """
     Dataset for loading GTV, CTV, and PTV contours from a single patient's RT Structure Set.
-    Converts contours to 128x128 bitmap images for each slice.
+    Converts contours to img_size bitmap images for each slice.
     """
 
-    def __init__(self, rtstruct_path1, rtstruct_path2, img_size=(128, 128)):
+    def __init__(self, rtstruct_path1, rtstruct_path2, img_size=(512, 512)):
 
         self.dataset1 = RSDataset(rtstruct_path1, img_size)
         self.dataset2 = RSDataset(rtstruct_path2, img_size)
