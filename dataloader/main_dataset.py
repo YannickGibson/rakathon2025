@@ -11,8 +11,6 @@ from tqdm import tqdm
 from pair_dataset import PairDataset
 from rs_dataset import RSDataset
 
-SAMPLE_PATH = "dataloader/data/full/"
-
 class MainDataset(Dataset):
     """
     Dataset for loading GTV, CTV, and PTV contours from a single patient's RT Structure Set.
@@ -48,7 +46,7 @@ class MainDataset(Dataset):
         print(f"Loading {len(self.SAMPLE_PATHs)} samples from {self.SAMPLE_PATHs[0]} to {self.SAMPLE_PATHs[-1]}")
 
         if mock:
-            date_path_dict = {'20230616': 'dataloader/data/full//SAMPLE_001/RS.1.2.246.352.221.46272062591570509005209218152822185346.dcm', '20230719': 'dataloader/data/full//SAMPLE_001/RS.1.2.246.352.221.46648924540845111847267152667592345525.dcm', '20240306': 'dataloader/data/full//SAMPLE_001/RS.1.2.246.352.221.474069323621439861613904667800073459614.dcm'}
+            date_path_dict = {'20230616': f'{DATASET_PATH}/SAMPLE_001/RS.1.2.246.352.221.46272062591570509005209218152822185346.dcm', '20230719': f'{DATASET_PATH}/SAMPLE_001/RS.1.2.246.352.221.46648924540845111847267152667592345525.dcm', '20240306': f'{DATASET_PATH}/SAMPLE_001/RS.1.2.246.352.221.474069323621439861613904667800073459614.dcm'}
         else:
             for sample_path in self.SAMPLE_PATHs:
                 # Find all rs files
@@ -110,8 +108,10 @@ class MainDataset(Dataset):
         raise IndexError 
 
 if __name__ == "__main__":
+    DATASET_PATH = "dataloader/data/full/"
+
     main_dataset = MainDataset(
-        DATASET_PATH=SAMPLE_PATH,
+        DATASET_PATH=DATASET_PATH,
         limit_samples=1, limit_rs_pairs=1,
         mock=True, verbose=True)
     

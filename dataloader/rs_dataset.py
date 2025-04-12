@@ -1,12 +1,11 @@
 import numpy as np
 import torch
+import os
 from torch.utils.data import Dataset, DataLoader
 import pydicom
 from skimage.draw import polygon2mask
 import matplotlib.pyplot as plt
 from skimage.transform import resize
-
-DATASET_PATH = "dataloader/data/full/SAMPLE_001"
 
 class RSDataset(Dataset):
     """
@@ -15,6 +14,7 @@ class RSDataset(Dataset):
     """
     def __init__(self, rtstruct_path, img_size=(128, 128), verbose=False):
         self.rtstruct_path = rtstruct_path
+        self.dataset_path = os.path.dirname(rtstruct_path)
         self.img_size = img_size
         self.slices = []
         self.verbose = verbose
@@ -185,7 +185,7 @@ class RSDataset(Dataset):
     
     def _load_ct_image(self, uid):
         """Load and scale CT image based on UI"""
-        ct_path = f"{DATASET_PATH}/CT.{uid}.dcm"
+        ct_path = f"{self.dataset_path}/CT.{uid}.dcm"
         try:
             ct_dicom = pydicom.dcmread(ct_path)
             ct_array = ct_dicom.pixel_array
@@ -330,11 +330,12 @@ class RSDataset(Dataset):
 # Example usage
 if __name__ == "__main__":
     # Order of masks in contour is GTV, CTV, PTV
+    SAMPLE_PATH = "dataloader/data/full/SAMPLE_001"
 
 
     # Path to the specific RTSTRUCT file
     #rtstruct_path = f"{DATASET_PATH}/RS.1.2.246.352.221.46272062591570509005209218152822185346.dcm"
-    rtstruct_path = f"{DATASET_PATH}/RS.1.2.246.352.221.53086809173815688567595866456863246500.dcm"
+    rtstruct_path = f"{SAMPLE_PATH}/RS.1.2.246.352.221.53086809173815688567595866456863246500.dcm"
     
     # Create dataset
     dataset = RSDataset(rtstruct_path, verbose=True)
