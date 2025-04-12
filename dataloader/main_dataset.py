@@ -18,7 +18,7 @@ class MainDataset(Dataset):
     Dataset for loading GTV, CTV, and PTV contours from a single patient's RT Structure Set.
     Converts contours to 128x128 bitmap images for each slice.
     """
-    def __init__(self, DATASET_PATH: str, img_size=(128, 128), limit_samples: int | None = None, limit_rs_pairs: int | None = None, verbose=True):
+    def __init__(self, DATASET_PATH: str, img_size=(128, 128), limit_samples: int | None = None, limit_rs_pairs: int | None = None, mock=False, verbose=True):
         """
         Args:
             DATASET_PATH is the full dataset path with all patients.
@@ -47,36 +47,34 @@ class MainDataset(Dataset):
 
         print(f"Loading {len(self.SAMPLE_PATHs)} samples from {self.SAMPLE_PATHs[0]} to {self.SAMPLE_PATHs[-1]}")
 
+        if mock:
+            date_path_dict = {'20230616': 'dataloader/data/full//SAMPLE_001/RS.1.2.246.352.221.46272062591570509005209218152822185346.dcm', '20230719': 'dataloader/data/full//SAMPLE_001/RS.1.2.246.352.221.46648924540845111847267152667592345525.dcm', '20240306': 'dataloader/data/full//SAMPLE_001/RS.1.2.246.352.221.474069323621439861613904667800073459614.dcm'}
+        else:
+            for sample_path in self.SAMPLE_PATHs:
+                # Find all rs files
+                rs_files = []
+                for file in os.listdir(sample_path):
+                    if file.startswith("RS."):
+                        rs_files.append(f"{sample_path}/{file}")
 
-        for sample_path in self.SAMPLE_PATHs:
-            # Find all rs files
-            # rs_files = []
-            # for file in os.listdir(sample_path):
-            #     if file.startswith("RS."):
-            #         rs_files.append(f"{sample_path}/{file}")
-
-            # rs_files.sort()
-            # if limit_rs_pairs is not None:
-            #     rs_files = rs_files[:limit_rs_pairs]
+                rs_files.sort()
+                if limit_rs_pairs is not None:
+                    rs_files = rs_files[:limit_rs_pairs]
 
 
-            # date_path_dict = {}
-            
-            # sample_folder = sample_path.replace('\\', "/").split("/")[-1]
-            # if self.verbose:
-            #     pbar = tqdm(rs_files, desc=f"Loading RS files from '{sample_folder}'")
-            # else:
-            #     pbar = rs_files
-            # for rs_file in pbar:
-            #     dataset = RTStructSliceDataset(rs_file, img_size=self.img_size, verbose=False)
-            #     if len(dataset) > 0:
-            #         date = dataset[0]['review_date']
-            #         date_path_dict[date] = rs_file
-            #         print(f"Added file")
-
-            # print(date_path_dict)
-            pass
-        date_path_dict = {'20230616': 'dataloader/data/full//SAMPLE_001/RS.1.2.246.352.221.46272062591570509005209218152822185346.dcm', '20230719': 'dataloader/data/full//SAMPLE_001/RS.1.2.246.352.221.46648924540845111847267152667592345525.dcm', '20240306': 'dataloader/data/full//SAMPLE_001/RS.1.2.246.352.221.474069323621439861613904667800073459614.dcm'}
+                date_path_dict = {}
+                
+                sample_folder = sample_path.replace('\\', "/").split("/")[-1]
+                if self.verbose:
+                    pbar = tqdm(rs_files, desc=f"Loading RS files from '{sample_folder}'")
+                else:
+                    pbar = rs_files
+                for rs_file in pbar:
+                    dataset = RTStructSliceDataset(rs_file, img_size=self.img_size, verbose=False)
+                    if len(dataset) > 0:
+                        date = dataset[0]['review_date']
+                        date_path_dict[date] = rs_file
+                        print(f"Added file")
         sorted_keys = sorted(list(date_path_dict.keys()))
 
         self.pair_datasets = []
