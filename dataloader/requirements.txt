@@ -2,3 +2,4 @@ scikit-image
 pydicom
 torch
 matplotlib
+tqdm
