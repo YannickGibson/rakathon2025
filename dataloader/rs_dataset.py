@@ -8,7 +8,7 @@ from skimage.transform import resize
 
 DATASET_PATH = "dataloader/data/full/SAMPLE_001"
 
-class RTStructSliceDataset(Dataset):
+class RSDataset(Dataset):
     """
     Dataset for loading GTV, CTV, and PTV contours from a single patient's RT Structure Set.
     Converts contours to 128x128 bitmap images for each slice.
@@ -337,7 +337,7 @@ if __name__ == "__main__":
     rtstruct_path = f"{DATASET_PATH}/RS.1.2.246.352.221.53086809173815688567595866456863246500.dcm"
     
     # Create dataset
-    dataset = RTStructSliceDataset(rtstruct_path, verbose=True)
+    dataset = RSDataset(rtstruct_path, verbose=True)
     
     dataset[0]
     # # Print slice information

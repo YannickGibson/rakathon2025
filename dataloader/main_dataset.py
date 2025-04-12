@@ -74,7 +74,6 @@ class MainDataset(Dataset):
                     if len(dataset) > 0:
                         date = dataset[0]['review_date']
                         date_path_dict[date] = rs_file
-                        print(f"Added file")
         sorted_keys = sorted(list(date_path_dict.keys()))
 
         self.pair_datasets = []
@@ -91,6 +90,7 @@ class MainDataset(Dataset):
             path1 = date_path_dict[date1]
             path2 = date_path_dict[date2]
             # Now we load pair dataset
+            print(path1, path2)
             pair_dataset = PairDataset(path1, path2, img_size=self.img_size)
             self.pair_datasets.append(pair_dataset)
             self.pair_dataset_start.append(self.total_count)
@@ -110,7 +110,10 @@ class MainDataset(Dataset):
         raise IndexError 
 
 if __name__ == "__main__":
-    main_dataset = MainDataset(DATASET_PATH=SAMPLE_PATH, limit_samples=1, limit_rs_pairs=10,verbose=True)
+    main_dataset = MainDataset(
+        DATASET_PATH=SAMPLE_PATH,
+        limit_samples=1, limit_rs_pairs=1,
+        mock=True, verbose=True)
     
     print(main_dataset[0])
     
