@@ -31,6 +31,7 @@ class PairDataset(RTStructSliceDataset):
         self.offset = 0
         self.review_date_1 = None
         self.review_date_2 = None
+        self.is_problematic = False
         self.sort_map = self._sort_slices()
 
     def _sort_slices(self):
@@ -55,6 +56,9 @@ class PairDataset(RTStructSliceDataset):
             lowest_z_positions[review_date] = min(slices.keys())
             max_z_positions[review_date] = max(slices.keys())
 
+        print("lowest_z_positions: ", lowest_z_positions)
+        print("max_z_positions: ", max_z_positions)
+
         self.lowest_z_position = max(lowest_z_positions.values())
         self.max_z_position = min(max_z_positions.values())
 
@@ -66,6 +70,12 @@ class PairDataset(RTStructSliceDataset):
 
         self.max_z_position_1 = max_z_positions[self.review_date_1]
         self.max_z_position_2 = max_z_positions[self.review_date_2]
+
+        if (
+            self.lowest_z_position_1 > self.max_z_position_2
+            or self.lowest_z_position_2 > self.max_z_position_1
+        ):
+            self.is_problematic = True
 
         self.offset = (
             self.dataset2[0]["z_position"] - self.dataset1[0]["z_position"]
@@ -91,6 +101,8 @@ class PairDataset(RTStructSliceDataset):
             while abs(self.max_z_position_1 - self.max_z_position_2) > 1:
                 self.max_z_position_1 = self.max_z_position_1 - 3
 
+ 
+
         return map
 
     def _load_ct_image(self, ui):
@@ -98,12 +110,17 @@ class PairDataset(RTStructSliceDataset):
         self.dataset.load_ct_image(ui)
 
     def __len__(self):
+
+        if self.is_problematic:
+            return 0
+
         return int(abs(self.lowest_z_position_1 - self.max_z_position_1) // 3) + 1
 
     def _get_indexes_of_datasets(self, idx):
         z_position_1 = int(self.lowest_z_position_1 + idx * 3)
         z_position_2 = int(self.lowest_z_position_2 + idx * 3)
- 
+
+        print(f"z_position_1: {z_position_1}, z_position_2: {z_position_2}")
 
         item1_position = self.sort_map[self.dataset1[0]["review_date"]].get(
             z_position_1, "None"
@@ -112,11 +129,13 @@ class PairDataset(RTStructSliceDataset):
             z_position_2, "None"
         )
 
-       # print(f"z_position_1: {z_position_1}, z_position_2: {z_position_2}")
-       # print(f"item1_position: {item1_position}, item2_position: {item2_position}")
+        print(f"item1_position: {item1_position}, item2_position: {item2_position}")
         return item1_position, item2_position
 
     def __getitem__(self, idx):
+
+        if self.is_problematic:
+            raise IndexError("Dataset is problematic")
 
         z_position = int(self.lowest_z_position + idx * 3)
 
@@ -169,16 +188,15 @@ if __name__ == "__main__":
     rtstruct_path2 = (
         DATASET_PATH + "/RS.1.2.246.352.221.46648924540845111847267152667592345525.dcm"
     )
+
+    rtstruct_path = "dataloader/data/full//SAMPLE_001/RS.1.2.246.352.221.46648924540845111847267152667592345525.dcm"
+
+    rtstruct_path2 = "dataloader/data/full//SAMPLE_001/RS.1.2.246.352.221.474069323621439861613904667800073459614.dcm"
+
     # Create dataset
     dataset = RTStructSliceDataset(rtstruct_path1)
 
-    print(dataset[0]["z_position"])
-    print(dataset[56]["z_position"])
-
     dataset = RTStructSliceDataset(rtstruct_path2)
-
-    print(dataset[0]["z_position"])
-    print(dataset[56]["z_position"])
 
     dataset = PairDataset(rtstruct_path2, rtstruct_path1)
     dataset = PairDataset(rtstruct_path1, rtstruct_path2)
