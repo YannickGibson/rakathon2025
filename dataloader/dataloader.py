@@ -233,6 +233,17 @@ class RTStructSliceDataset(Dataset):
         ct_array = self._load_ct_image(instance_uid)
         ct_tensor = torch.tensor(ct_array, dtype=torch.float32).unsqueeze(0)
         
+        if getattr(self.rtstruct, 'ReviewDate', False):
+            review_date = self.rtstruct.ReviewDate
+        elif getattr(self.rtstruct, 'StructureSetDate', False):
+            review_date = self.rtstruct.StructureSetDate
+        elif getattr(self.rtstruct, 'StudyDate', False):
+            review_date = self.rtstruct.StudyDate
+        # elif getattr(self.rtstruct, 'InstanceCreationDate', False):
+        #     review_date = self.rtstruct.InstanceCreationDate
+        else:
+            review_date = None
+
         return {
             'masks': masks,  # Shape: [3, 128, 128]
             'ct': ct_tensor,  # Shape: [1, 128, 128]
@@ -240,7 +251,7 @@ class RTStructSliceDataset(Dataset):
             'index': idx,
             'rs_uid': slice_data['rs_uid'],  # Include the UI in the returned dictionary
             "instance_uid": instance_uid,
-            "review_date": self.rtstruct.ReviewDate,
+            "review_date": review_date,
             "pixel_size_mm": self.pixel_size_mm
         }
     
@@ -319,7 +330,8 @@ if __name__ == "__main__":
 
 
     # Path to the specific RTSTRUCT file
-    rtstruct_path = f"{DATASET_PATH}/RS.1.2.246.352.221.46272062591570509005209218152822185346.dcm"
+    #rtstruct_path = f"{DATASET_PATH}/RS.1.2.246.352.221.46272062591570509005209218152822185346.dcm"
+    rtstruct_path = f"{DATASET_PATH}/RS.1.2.246.352.221.53086809173815688567595866456863246500.dcm"
     
     # Create dataset
     dataset = RTStructSliceDataset(rtstruct_path, verbose=True)
