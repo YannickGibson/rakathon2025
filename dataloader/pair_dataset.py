@@ -74,7 +74,9 @@ class PairDataset(Dataset):
             self.lowest_z_position_1 > self.max_z_position_2
             or self.lowest_z_position_2 > self.max_z_position_1
         ):
+            print("Problematic dataset XD")
             self.is_problematic = True
+            return map
 
         self.offset = (
             self.dataset2[0]["z_position"] - self.dataset1[0]["z_position"]
@@ -197,8 +199,8 @@ if __name__ == "__main__":
 
     dataset = RSDataset(rtstruct_path2)
 
-    dataset = PairDataset(rtstruct_path2, rtstruct_path1)
-    dataset = PairDataset(rtstruct_path1, rtstruct_path2)
+    dataset = PairDataset(rtstruct_path, rtstruct_path2)
+    dataset = PairDataset(rtstruct_path2, rtstruct_path)
 
     print(dataset[0]["z_position"])
     print(dataset[56]["z_position"])
