@@ -12,27 +12,27 @@ from dataloader import RTStructSliceDataset
 DATASET_PATH = "dataloader/data/full/SAMPLE_001"
 
 
-class PairDataloader(DataLoader):
+class PairDataset(RTStructSliceDataset):
     """
     Dataset for loading GTV, CTV, and PTV contours from a single patient's RT Structure Set.
     Converts contours to 128x128 bitmap images for each slice.
     """
-    """
-        def __init__(self, rtstruct_path, img_size=(128, 128)):
 
-            self.dataset = RTStructSliceDataset(rtstruct_path, img_size)
+    def __init__(self, rtstruct_path, img_size=(128, 128)):
 
-    """
-    def __init__(self, rtstruct_path, img_size=(128, 128), batch_size=1, shuffle=False, **kwargs):
         self.dataset = RTStructSliceDataset(rtstruct_path, img_size)
-        super().__init__(self.dataset, batch_size=batch_size, shuffle=shuffle, **kwargs)
+    """
 
+        def __init__(self, rtstruct_path, img_size=(128, 128), batch_size=1, shuffle=False, **kwargs):
+            self.dataset = RTStructSliceDataset(rtstruct_path, img_size)
+            super().__init__(self.dataset, batch_size=batch_size, shuffle=shuffle, **kwargs)
+    """
     def _load_ct_image(self, ui):
         """Load and scale CT image based on UI"""
         self.dataset.load_ct_image(ui)
 
     def __len__(self):
-        return len(self.slices / 2)
+        return len(self.dataset) // 2 
 
     def __getitem__(self, idx):
 
@@ -60,9 +60,10 @@ if __name__ == "__main__":
     rtstruct_path = "dataloader/data/full/SAMPLE_001/RS.1.2.246.352.221.46272062591570509005209218152822185346.dcm"
 
     # Create dataset
-    dataset = RTStructSliceDataset(rtstruct_path)
+    dataset = PairDataset(rtstruct_path)
 
     dataset[0]
+    dataset[1]
     # Print slice information
     
     slice_info = dataset.get_all_slices_info()
@@ -76,16 +77,21 @@ if __name__ == "__main__":
         )
 
     # Create DataLoader
-    dataloader = PairDataloader(dataset, batch_size=4, shuffle=False)
+    dataloader = DataLoader(dataset, batch_size=4, shuffle=False)
 
     # Example of iterating through the dataloader
     for batch in dataloader:
-        masks = batch["masks"]
-        z_positions = batch["z_position"]
-        print(f"Batch shape: {masks.shape}, Z positions: {z_positions}")
-
+        masks1 = batch["item1"]["masks"]
+        masks2 = batch["item2"]["masks"]
+        z_positions1 = batch["item1"]["z_position"]
+        z_positions2 = batch["item2"]["z_position"]
+        print(f"1 Batch shape: {masks1.shape}, Z positions: {z_positions1}")
+        print(f"2 Batch shape: {masks2.shape}, Z positions: {z_positions2}")
+"""
     # Visualize a few slices
     for i in range(len(dataset)):
         fig = dataset.visualize_item(i + 35)
         plt.show()  # This will display the figure
         plt.close(fig)
+
+"""
