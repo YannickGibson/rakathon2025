@@ -90,7 +90,6 @@ class MainDataset(Dataset):
             path1 = date_path_dict[date1]
             path2 = date_path_dict[date2]
             # Now we load pair dataset
-            print(path1, path2)
             pair_dataset = PairDataset(path1, path2, img_size=self.img_size)
             if len(pair_dataset) > 0:
                 self.pair_datasets.append(pair_dataset)
