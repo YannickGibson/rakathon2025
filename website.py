@@ -3,8 +3,10 @@ import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
 import io
+import sys
 
-from dataloader.main_dataset import MainDataset
+sys.path.append('dataloader')
+from main_dataset import MainDataset
 
 # Set page configuration
 st.set_page_config( page_title="Model Visualization", initial_sidebar_state="collapsed", menu_items=None)
@@ -34,6 +36,9 @@ def create_placeholder_image(width, height, text, color="lightgray"):
 
 dates = ["2023-05-06", "2024-01-11", "2025-02-14"]
 depths = [10, 13, 16, 19, 22]
+
+# add path of /dataloader/
+import sys
 
 SAMPLE_PATH = "dataloader/data/full/"
 
