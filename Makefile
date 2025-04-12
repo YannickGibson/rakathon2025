@@ -1,2 +1,2 @@
 website:
-	streamlit run website.py
+	streamlit run website.py --server.fileWatcherType none

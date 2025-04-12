@@ -101,24 +101,37 @@ class MainDataset(Dataset):
 
     def __getitem__(self, idx):
         # get outer index is our pair dataset
+        if idx >= self.total_count:
+            raise IndexError(f"Index {idx} is out of range. Max index is {self.total_count - 1}")
+        idx %= self.total_count
         for outer_index in range(len(self.pair_dataset_start)):
-            if idx >= self.pair_dataset_start[outer_index]:
+            if outer_index == len(self.pair_dataset_start) - 1 or idx < self.pair_dataset_start[outer_index + 1]:
                 inner_index = idx - self.pair_dataset_start[outer_index]
                 return self.pair_datasets[outer_index][inner_index]
         raise IndexError 
 
 if __name__ == "__main__":
-    DATASET_PATH = "dataloader/data/full/"
 
-    main_dataset = MainDataset(
-        DATASET_PATH=DATASET_PATH,
-        limit_samples=1, limit_rs_pairs=1,
-        mock=True, verbose=True)
-    
+    LOAD_PICKLE = True
+
+    if LOAD_PICKLE:
+        import pickle
+        print("Loading dataset (this should only appear once)")
+        with open('main_dataset.pkl', 'rb') as f:
+            main_dataset = pickle.load(f)
+    else:
+        DATASET_PATH = "dataloader/data/full/"
+
+        main_dataset = MainDataset(
+            DATASET_PATH=DATASET_PATH,
+            limit_samples=1, limit_rs_pairs=1,
+            mock=True, verbose=True)
+
     print(main_dataset[0])
-    
-    main_dataloader = DataLoader(main_dataset, batch_size=4, shuffle=False)
 
-    for batch in main_dataloader:
-        pass
+        # # save as pickle
+        # import pickle
+        # with open('main_dataset.pkl', 'wb') as f:
+        #     pickle.dump(main_dataset, f)
+
     print("Done.")
