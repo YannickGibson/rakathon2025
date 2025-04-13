@@ -2,9 +2,29 @@ import SimpleITK as sitk
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+
 def plot_images(planning_ct, cbct, title='Planning CT', title2='CBCT'):
     planning_ct_img = sitk.GetArrayFromImage(planning_ct)
     cbct_img = sitk.GetArrayFromImage(cbct)   
+    
+    plt.figure(figsize=(12, 6))
+    plt.subplot(1, 2, 1)
+    plt.imshow(planning_ct_img, cmap='gray')
+    plt.title(title)
+    plt.axis('off')
+
+    plt.subplot(1, 2, 2)
+    plt.imshow(cbct_img, cmap='gray')
+    plt.title(title2)
+    plt.axis('off')
+
+    plt.tight_layout()
+    plt.show()
+    
+def plot_images_np(planning_ct, cbct, title='Planning CT', title2='CBCT'):
+    planning_ct_img = planning_ct
+    cbct_img = cbct   
     
     plt.figure(figsize=(12, 6))
     plt.subplot(1, 2, 1)
@@ -93,7 +113,7 @@ def perform_rigid_registration_v2(fixed_image, moving_image, sampling_percentage
             sitk.Cast(moving_image, sitk.sitkFloat32)
         )
 
-        print(final_transform)
+        #print(final_transform)
         
 
         return final_transform
@@ -141,8 +161,8 @@ def perform_bspline_registration(fixed_image, moving_image, grid_physical_spacin
     
     # 3. Execute registration.
     final_transform = registration_method.Execute(fixed_image, moving_image)
-    print("Final BSpline registration metric value: {0}".format(registration_method.GetMetricValue()))
-    print("Optimizer's stopping condition: {0}".format(registration_method.GetOptimizerStopConditionDescription()))
+    #print("Final BSpline registration metric value: {0}".format(registration_method.GetMetricValue()))
+    #print("Optimizer's stopping condition: {0}".format(registration_method.GetOptimizerStopConditionDescription()))
     
     return final_transform
 
