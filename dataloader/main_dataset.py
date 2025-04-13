@@ -157,16 +157,18 @@ if __name__ == "__main__":
 
         main_dataset = MainDataset(
             DATASET_PATH=DATASET_PATH,
-            limit_samples=3, limit_rs_pairs=40,
+            img_size=(1024, 1024),
+            limit_samples=1, limit_rs_pairs=10,
+            #limit_samples=3, limit_rs_pairs=40,
             mock=True, verbose=True)
 
-        save_name = "small_main_dataset"
-        print("Saving dataset via pickle")
+        save_name = "new_small_main_dataset"
+        print("Saving dataset via pickle to", save_name)
         import pickle
         with open(f'{save_name}.pkl', 'wb') as f:
             pickle.dump(main_dataset, f)
     print(f"Amount of pairs: {len(main_dataset.pair_datasets)}")
-    print(main_dataset[0])
+    #print(main_dataset[0])
 
         # save as pickle
 

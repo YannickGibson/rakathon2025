@@ -71,8 +71,8 @@ class RSDataset(Dataset):
             
             # Check if this ROI has contours
             if hasattr(roi, 'ContourSequence'):
-                for contour in roi.ContourSequence:
-                    instance_iud = roi.ContourSequence[0].ContourImageSequence[0].ReferencedSOPInstanceUID
+                for i, contour in enumerate(roi.ContourSequence):
+                    instance_iud = roi.ContourSequence[i].ContourImageSequence[0].ReferencedSOPInstanceUID
                     instance_iuds[roi_name].append(instance_iud)
                     contour_data = contour.ContourData
                     points = np.array(contour_data).reshape(-1, 3)
@@ -152,8 +152,8 @@ class RSDataset(Dataset):
                 "instance_uid": instance_uid
             })
     
-    def _contour_to_mask(self, contour, img_size):
-        """Convert contour points to a binary mask with specified bounds"""
+    def _contour_to_mask(self, contour, img_size, ct_dicom):
+        """Convert contour points to a binary mask using DICOM coordinate transformation"""
         if len(contour) < 3:  # Need at least 3 points for a polygon
             return np.zeros(img_size, dtype=np.bool_)
         
@@ -161,28 +161,24 @@ class RSDataset(Dataset):
         x_points = contour[:, 0]
         y_points = contour[:, 1]
         
-        # Define the bounds
-
+        # Get image position and pixel spacing from CT
+        img_pos = ct_dicom.ImagePositionPatient
+        pixel_spacing = ct_dicom.PixelSpacing
         
-        # Scale points to fit within the bounds
+        # Convert from patient coordinates to pixel coordinates
+        x_pixels = (x_points - img_pos[0]) / pixel_spacing[0]
+        y_pixels = (y_points - img_pos[1]) / pixel_spacing[1]
         
-        # Scale to image dimensions
-        x_img = (x_points - self.x_min) / self.x_range * img_size[1]
-        y_img = (y_points - self.y_min) / self.y_range * img_size[0]
+        # polygon2mask expects vertices as (row, col)
+        vertices = np.column_stack((y_pixels, x_pixels))
         
-        # Create polygon vertices
-        vertices = np.column_stack((y_img, x_img))
-        
-        # Create mask from polygon
         try:
             mask = polygon2mask(img_size, vertices)
-            # Flip the mask vertically before returning
-            mask = np.flipud(mask)
-            return mask  # polygon2mask already returns boolean array
-        except:
-            print(f"Error creating mask for contour with {len(contour)} points")
-            return np.zeros(img_size, dtype=np.bool_)
-    
+            return mask
+        except Exception as e:
+            print(f"Error creating mask for contour: {e}")
+            return np.zeros(img_size, dtype=bool)
+        
     def _load_ct_image(self, uid):
         """Load and scale CT image based on UI"""
         ct_path = f"{self.dataset_path}/CT.{uid}.dcm"
@@ -209,6 +205,14 @@ class RSDataset(Dataset):
     def __getitem__(self, idx):
         slice_data = self.slices[idx]
         instance_uid = slice_data["instance_uid"]
+
+        # Load CT DICOM for coordinate transformation
+        ct_path = f"{self.dataset_path}/CT.{instance_uid}.dcm"
+        try:
+            ct_dicom = pydicom.dcmread(ct_path)
+        except Exception as e:
+            print(f"Error loading CT DICOM: {e}")
+            ct_dicom = None
         
         # Initialize empty masks
         gtv_mask = np.zeros(self.img_size, dtype=np.bool_)
@@ -217,13 +221,13 @@ class RSDataset(Dataset):
         
         # Fill masks based on contours
         for gtv_contour in slice_data['contours']['GTV']:
-            gtv_mask |= self._contour_to_mask(gtv_contour, self.img_size)
+            gtv_mask |= self._contour_to_mask(gtv_contour, self.img_size, ct_dicom)
         
         for ctv_contour in slice_data['contours']['CTV']:
-            ctv_mask |= self._contour_to_mask(ctv_contour, self.img_size)
+            ctv_mask |= self._contour_to_mask(ctv_contour, self.img_size, ct_dicom)
         
         for ptv_contour in slice_data['contours']['PTV']:
-            msk = self._contour_to_mask(ptv_contour, self.img_size)
+            msk = self._contour_to_mask(ptv_contour, self.img_size, ct_dicom)
             ptv_mask |= msk
         
         # Convert to torch tensors
