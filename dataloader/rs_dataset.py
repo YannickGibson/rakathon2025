@@ -165,12 +165,19 @@ class RSDataset(Dataset):
         img_pos = ct_dicom.ImagePositionPatient
         pixel_spacing = ct_dicom.PixelSpacing
         
-        # Convert from patient coordinates to pixel coordinates
+        # Convert from patient coordinates to pixel coordinates in the original image size
         x_pixels = (x_points - img_pos[0]) / pixel_spacing[0]
         y_pixels = (y_points - img_pos[1]) / pixel_spacing[1]
         
+        # Get original dimensions from DICOM
+        original_size = ct_dicom.pixel_array.shape
+        
+        # Scale coordinates to match target img_size
+        x_scaled = x_pixels * (img_size[1] / original_size[1])
+        y_scaled = y_pixels * (img_size[0] / original_size[0])
+        
         # polygon2mask expects vertices as (row, col)
-        vertices = np.column_stack((y_pixels, x_pixels))
+        vertices = np.column_stack((y_scaled, x_scaled))
         
         try:
             mask = polygon2mask(img_size, vertices)
@@ -344,7 +351,7 @@ if __name__ == "__main__":
     rtstruct_path = f"{SAMPLE_PATH}/RS.1.2.246.352.221.53086809173815688567595866456863246500.dcm"
     
     # Create dataset
-    dataset = RSDataset(rtstruct_path, verbose=True)
+    dataset = RSDataset(rtstruct_path, verbose=True, img_size=(1024, 1024))
     
     dataset[0]
     # # Print slice information
