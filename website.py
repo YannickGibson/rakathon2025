@@ -109,16 +109,18 @@ st.session_state.data = data
 # Create UI
 st.markdown("### Demonstration")
 
+
 # Use column layout for controls to save space
-control_cols = st.columns(2)
-with control_cols[0]:
-    # Create zeroth date which will be date one day before the first one
-    zeroth_date = datetime.strptime(curr_date, '%Y-%m-%d') - timedelta(days=1)
-    zeroth_date = zeroth_date.strftime('%Y-%m-%d')
-    selected_date = st.select_slider("Select Date", options=[zeroth_date] + dates, value=curr_date)
+control_cols = st.columns(1)
+selected_date = curr_date
+# with control_cols[0]:
+#     # Create zeroth date which will be date one day before the first one
+#     zeroth_date = datetime.strptime(curr_date, '%Y-%m-%d') - timedelta(days=1)
+#     zeroth_date = zeroth_date.strftime('%Y-%m-%d')
+#     selected_date = st.select_slider("Select Date", options=[zeroth_date] + dates, value=curr_date)
 
 # Only show depths that are available for the selected date
-with control_cols[1]:
+with control_cols[0]:
     if selected_date in dates_depths:
         available_depths = sorted(dates_depths[selected_date])
         curr_depth = available_depths[0] if available_depths else 0
@@ -197,7 +199,7 @@ with top_cols[0]:
 # Create layout
 with top_cols[1]:
     date = main_dataset[dat_index]["item1"]["review_date"]
-    st.write(f"**Transformation of ({format_review_date(date)})**")
+    st.write(f"**Transformation ({format_review_date(date)})**")
     ct_img1=main_dataset[dat_index]["item1"]["ct"].numpy().squeeze()
     ct_img2=main_dataset[dat_index]["item2"]["ct"].numpy().squeeze()
     masks = main_dataset[dat_index]["item1"]["masks"].numpy().squeeze()
