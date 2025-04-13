@@ -1,6 +1,47 @@
 import SimpleITK as sitk
 import matplotlib.pyplot as plt
 import numpy as np
+import cv2 
+
+def transform_masks(masks, fixed_image, global_transform, final_bspline_transform ):
+    transformed_masks = []
+    for mask in masks:
+        print(mask.shape)
+        # Convert to SimpleITK image
+        mask_sitk = sitk.GetImageFromArray(mask)
+        moved_mask = sitk.Resample(
+            mask_sitk,
+            fixed_image,
+            global_transform,
+            sitk.sitkLinear,
+            0,
+            mask_sitk.GetPixelID()
+        )
+        # Resample the mask using the transform
+        deformed_mask = resample_with_transform(moved_mask, fixed_image, final_bspline_transform)
+
+        transformed_masks.append(sitk.GetArrayFromImage(deformed_mask))
+    return np.array(transformed_masks)
+
+
+
+def draw_contours(img, masks):
+    ct_img_colored = np.stack([img, img, img], axis=-1)
+    colors = ['orange', 'red', 'blue']
+    colors_rgb = {'orange': [1.0, 0.65, 0], 'red': [1.0, 0, 0], 'blue': [0, 0, 1.0]}
+    
+    for i in range(3):
+        mask_layer = masks[i]
+        # Convert to uint8 for findContours
+        mask_uint8 = (mask_layer * 255).astype(np.uint8)
+        contours, _ = cv2.findContours(mask_uint8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        # Draw contours in the corresponding color
+        color = colors_rgb[colors[i]]
+        for contour in contours:
+            cv2.drawContours(ct_img_colored, [contour], -1, color, 2)
+    return ct_img_colored
+    
 
 
 
