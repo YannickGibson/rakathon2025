@@ -203,19 +203,28 @@ with top_cols[1]:
     masks = main_dataset[dat_index]["item1"]["masks"].numpy().squeeze()
     masks2 = main_dataset[dat_index]["item2"]["masks"].numpy().squeeze()
     z_pos = main_dataset[dat_index]["item1"]["z_position"]
-
-    deformed_planned_ct, transformed_masks = web_utils.transform_ct(
-    ct_img1, masks, ct_img2, masks2, z_pos, plot=False)
+    pixel_size_mm = main_dataset[dat_index]["item1"]['pixel_size_mm']
+    deformed_planned_ct, transformed_masks, t_vector = web_utils.transform_ct(
+    ct_img1, masks, ct_img2, masks2,
+    z_pos, pixel_size_mm, plot=False)
     vis_img = draw_contours(
         img=deformed_planned_ct,
         contours_mask=transformed_masks)
 
     st.image(vis_img, use_container_width=False, width=300)
 
+# calculate distance of t_vector
+distance = np.linalg.norm(t_vector)
+
+# if dist smaller than 3 mm write Ok, else write Stop the procedure
+message = "Stop the procedure" if distance >= 3 else "Ok"
+
 
 st.markdown("<hr>", unsafe_allow_html=True)
 st.markdown("<h1 style='text-align: center;'>Verdict</h1>", unsafe_allow_html=True)
-st.markdown("<h3 style='text-align: center;'>Stop the procedure.</h3>", unsafe_allow_html=True)
+st.markdown(f"<h3 style='text-align: center;'>Translation vector: ({t_vector[0]:.4f}, {t_vector[1]:.4f})</h3>", unsafe_allow_html=True)
+st.markdown(f"<h3 style='text-align: center;'>Distance: {distance:.2f} mm</h3>", unsafe_allow_html=True)
+st.markdown(f"<h3 style='text-align: center;'>{message}.</h3>", unsafe_allow_html=True)
 
 # Display selected values for debugging
 st.sidebar.write(f"Selected date: {selected_date}")

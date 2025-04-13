@@ -162,7 +162,7 @@ if __name__ == "__main__":
             #limit_samples=3, limit_rs_pairs=40,
             mock=True, verbose=True)
 
-        save_name = "new_small_main_dataset"
+        save_name = "_new_small_main_dataset"
         print("Saving dataset via pickle to", save_name)
         import pickle
         with open(f'{save_name}.pkl', 'wb') as f:

@@ -51,7 +51,7 @@ def draw_contours(img, masks):
 # masks2 = batch_mask2[i].detach().cpu().numpy()
 
 
-def transform_ct(ct_img1, masks, ct_img2, masks2, z_pos, y_cut=False, plot=False):
+def transform_ct(ct_img1, masks, ct_img2, masks2, z_pos, pixel_size_mm, y_cut=False, plot=False):
 
 
     # Convert to SimpleITK images
@@ -105,4 +105,12 @@ def transform_ct(ct_img1, masks, ct_img2, masks2, z_pos, y_cut=False, plot=False
     if plot:
         plot_images_np(deformed_with_contours, cbct_with_contours, title=f"Deformed Planning CT with contours - {z_pos}", title2=f"CBCT - {z_pos}")
 
-    return deformed_planned_ct, transformed_masks
+
+    mask_tranform = perform_rigid_registration_v2(sitk.GetImageFromArray(masks2[2]), sitk.GetImageFromArray(transformed_masks[2]) )
+    translation_vector = mask_tranform.GetTranslation()
+    # print(f"Translation vector: {translation_vector}"
+    pixel_to_mm = pixel_size_mm*1/4
+    translaction_vector = (translation_vector[0]*pixel_to_mm, translation_vector[1]*pixel_to_mm)
+    print(f"Translation vector: {translaction_vector} mm")
+
+    return deformed_planned_ct, transformed_masks, translaction_vector
