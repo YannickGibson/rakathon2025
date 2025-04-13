@@ -77,7 +77,8 @@ def format_review_date(date_str):
 st.set_page_config(
     page_title="Model Visualization",
     page_icon=":crystal_ball:",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="collapsed",
+    layout="wide"
     )
 
 # Add custom CSS to change background color
@@ -106,33 +107,7 @@ depth_mapping = data['depth_mapping']
 curr_date = dates[0]
 st.session_state.data = data
 
-# Create UI
-st.markdown("### Demonstration")
 
-
-# Use column layout for controls to save space
-control_cols = st.columns(1)
-selected_date = curr_date
-# with control_cols[0]:
-#     # Create zeroth date which will be date one day before the first one
-#     zeroth_date = datetime.strptime(curr_date, '%Y-%m-%d') - timedelta(days=1)
-#     zeroth_date = zeroth_date.strftime('%Y-%m-%d')
-#     selected_date = st.select_slider("Select Date", options=[zeroth_date] + dates, value=curr_date)
-
-# Only show depths that are available for the selected date
-with control_cols[0]:
-    if selected_date in dates_depths:
-        available_depths = sorted(dates_depths[selected_date])
-        curr_depth = available_depths[0] if available_depths else 0
-        select_depth = st.select_slider("Select Depth", options=available_depths, value=curr_depth)
-    else:
-        st.write("No depths available for this date")
-        select_depth = 0
-
-# Get data index if available
-dat_index = 0
-if selected_date in dates_depths and select_depth in depth_mapping.get(selected_date, {}):
-    dat_index = depth_mapping[selected_date][select_depth]
 
 # Create a single blank image to be reused
 
@@ -173,8 +148,33 @@ def draw_contours(img, contours_mask):
 
     return normalized
 
-bottom_cols = st.columns(1)
-with bottom_cols[0]:
+outter_cols = st.columns(2)
+
+with outter_cols[1]:
+    # Use column layout for controls to save space
+    selected_date = curr_date
+    # with control_cols[0]:
+    #     # Create zeroth date which will be date one day before the first one
+    #     zeroth_date = datetime.strptime(curr_date, '%Y-%m-%d') - timedelta(days=1)
+    #     zeroth_date = zeroth_date.strftime('%Y-%m-%d')
+    #     selected_date = st.select_slider("Select Date", options=[zeroth_date] + dates, value=curr_date)
+
+    # Only show depths that are available for the selected date
+    if selected_date in dates_depths:
+        available_depths = sorted(dates_depths[selected_date])
+        curr_depth = available_depths[0] if available_depths else 0
+        select_depth = st.select_slider("Select Depth", options=available_depths, value=curr_depth)
+    else:
+        st.write("No depths available for this date")
+        select_depth = 0
+
+# Get data index if available
+dat_index = 0
+if selected_date in dates_depths and select_depth in depth_mapping.get(selected_date, {}):
+    dat_index = depth_mapping[selected_date][select_depth]
+
+
+with outter_cols[0]:
     date = main_dataset[dat_index]["item1"]["review_date"]
     st.write(f"**Previous ({format_review_date(date)})**")
     img = main_dataset[dat_index]["item1"]["ct"].numpy().squeeze()
@@ -182,52 +182,56 @@ with bottom_cols[0]:
     vis_img = draw_contours(img=img, contours_mask=contours_mask)
     
     # Create three columns and use the middle one for the image
-    left_col, mid_col, right_col = st.columns([1, 2, 1])
+    left_col, mid_col, right_col = st.columns([1, 1, 1])
     with mid_col:
         st.image(vis_img, use_container_width=True, width=300)
 
-top_cols = st.columns(2)
-with top_cols[0]:
-    date = main_dataset[dat_index]["item2"]["review_date"]
-    st.write(f"**Now ({format_review_date(date)})**")
-    img=main_dataset[dat_index]["item2"]["ct"].numpy().squeeze()
-    contours_mask=main_dataset[dat_index]["item2"]["masks"].numpy().squeeze()
-    vis_img = draw_contours(img=img, contours_mask=contours_mask)
-    st.image(vis_img, use_container_width=False, width=300)
+    top_cols = st.columns(2)
+    with top_cols[0]:
+        date = main_dataset[dat_index]["item2"]["review_date"]
+        st.write(f"**Now ({format_review_date(date)})**")
+        img=main_dataset[dat_index]["item2"]["ct"].numpy().squeeze()
+        contours_mask=main_dataset[dat_index]["item1"]["masks"].numpy().squeeze()
+        vis_img = draw_contours(img=img, contours_mask=contours_mask)
+        st.image(vis_img, use_container_width=True, width=300)
 
 
-# Create layout
-with top_cols[1]:
-    date = main_dataset[dat_index]["item1"]["review_date"]
-    st.write(f"**Transformation ({format_review_date(date)})**")
-    ct_img1=main_dataset[dat_index]["item1"]["ct"].numpy().squeeze()
-    ct_img2=main_dataset[dat_index]["item2"]["ct"].numpy().squeeze()
-    masks = main_dataset[dat_index]["item1"]["masks"].numpy().squeeze()
-    masks2 = main_dataset[dat_index]["item2"]["masks"].numpy().squeeze()
-    z_pos = main_dataset[dat_index]["item1"]["z_position"]
-    pixel_size_mm = main_dataset[dat_index]["item1"]['pixel_size_mm']
-    deformed_planned_ct, transformed_masks, t_vector = web_utils.transform_ct(
-    ct_img1, masks, ct_img2, masks2,
-    z_pos, pixel_size_mm, plot=False)
-    vis_img = draw_contours(
-        img=deformed_planned_ct,
-        contours_mask=transformed_masks)
+    # Create layout
+    with top_cols[1]:
+        date = main_dataset[dat_index]["item1"]["review_date"]
+        st.write(f"**Transformation ({format_review_date(date)})**")
+        ct_img1=main_dataset[dat_index]["item1"]["ct"].numpy().squeeze()
+        ct_img2=main_dataset[dat_index]["item2"]["ct"].numpy().squeeze()
+        masks = main_dataset[dat_index]["item1"]["masks"].numpy().squeeze()
+        masks2 = main_dataset[dat_index]["item2"]["masks"].numpy().squeeze()
+        z_pos = main_dataset[dat_index]["item1"]["z_position"]
+        pixel_size_mm = main_dataset[dat_index]["item1"]['pixel_size_mm']
+        deformed_planned_ct, transformed_masks, t_vector = web_utils.transform_ct(
+        ct_img1, masks, ct_img2, masks2,
+        z_pos, pixel_size_mm, plot=True)
 
-    st.image(vis_img, use_container_width=False, width=300)
-
-# calculate distance of t_vector
-distance = np.linalg.norm(t_vector)
-
-# if dist smaller than 3 mm write Ok, else write Stop the procedure
-message = "Stop the procedure" if distance >= 3 else "Ok"
+        img=main_dataset[dat_index]["item2"]["ct"].numpy().squeeze()
+        vis_img = draw_contours(
+            img=img,
+            contours_mask=transformed_masks)
 
 
-st.markdown("<hr>", unsafe_allow_html=True)
-st.markdown("<h1 style='text-align: center;'>Verdict</h1>", unsafe_allow_html=True)
-st.markdown(f"<h3 style='text-align: center;'>Translation vector: ({t_vector[0]:.4f}, {t_vector[1]:.4f})</h3>", unsafe_allow_html=True)
-st.markdown(f"<h3 style='text-align: center;'>Distance: {distance:.2f} mm</h3>", unsafe_allow_html=True)
-st.markdown(f"<h3 style='text-align: center;'>{message}.</h3>", unsafe_allow_html=True)
+        st.image(vis_img, use_container_width=True, width=300)
 
-# Display selected values for debugging
-st.sidebar.write(f"Selected date: {selected_date}")
-st.sidebar.write(f"Selected depth: {select_depth}")
+with outter_cols[1]:
+    # calculate distance of t_vector
+    distance = np.linalg.norm(t_vector)
+
+    # if dist smaller than 3 mm write Ok, else write Stop the procedure
+    message = "Stop the procedure" if distance >= 3 else "Ok"
+
+
+    st.markdown("<hr>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center;'>Verdict</h1>", unsafe_allow_html=True)
+    st.markdown(f"<h3 style='text-align: center;'>Translation vector: ({t_vector[0]:.4f}, {t_vector[1]:.4f})</h3>", unsafe_allow_html=True)
+    st.markdown(f"<h3 style='text-align: center;'>Distance: {distance:.2f} mm</h3>", unsafe_allow_html=True)
+    st.markdown(f"<h3 style='text-align: center;'>{message}.</h3>", unsafe_allow_html=True)
+
+    # Display selected values for debugging
+    st.sidebar.write(f"Selected date: {selected_date}")
+    st.sidebar.write(f"Selected depth: {select_depth}")
