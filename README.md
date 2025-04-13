@@ -3,7 +3,7 @@
 
 # 3D annotation translation
 
-AI system to transform annotaitons of Computed Tomography (CT) scans made by doctors. Those are critical areas such as spinal chord and esophagus and areas of interest such as GTV and CTV. The annotations are transfered using a affine transform calculated by an algorihm. The annotations (colored in shades of red) are transfered to a given CT without annotations made by doctors.
+AI system to transform annotations of CT scans made by doctors, including critical areas like the spinal cord and esophagus, and regions of interest such as GTV and CTV, using an affine transform computed by an algorithm; the annotations (shaded red) are transferred to unannotated CT scans.
 
 # Setup
 
